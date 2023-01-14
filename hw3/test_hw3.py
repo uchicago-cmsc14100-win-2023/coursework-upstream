@@ -192,6 +192,7 @@ rtests = [
     (list(range(1, 100)), 5.177377517639621)]
 
 
+@pytest.mark.timeout(60)
 @pytest.mark.parametrize("values, expected", rtests)
 def test_sum_reciprocals(values, expected):
     """
@@ -226,6 +227,7 @@ cc_tests = [
      [TRUCK_WEIGHT_THRESHOLD + 1], 2),
     (mixed, 15),
     ]
+@pytest.mark.timeout(60)
 @pytest.mark.parametrize("weights, expected", cc_tests)
 def test_count_trucks(weights, expected):
     """
@@ -246,6 +248,7 @@ ldb_tests = [
     ([10, 2, 10, 3, 10, 4], 5, 10),
     (list(range(1,100)), 2, 98)
     ]
+@pytest.mark.timeout(60)
 @pytest.mark.parametrize("values, divisor, expected", ldb_tests)
 def test_largest_divisible_by(values, divisor, expected):
     """
