@@ -89,7 +89,7 @@ add_tests = [
     ((255, 255, 255), (255, 255, 255), (510, 510, 510)),
     ((10, 11, 12), (1, 1, 1), (11, 12, 13))
     ]
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(15)
 @pytest.mark.parametrize("triple1, triple2, expected", add_tests)
 def test_add_triples(triple1, triple2, expected):
     """
@@ -117,7 +117,7 @@ scale_tests = [
     ((0*3, 0+0+255, 0+0+124), 1/3, (0, 85, 41)),
     ((1275, 1275, 1020), 1/9,  (141, 141, 113))
 ]
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(15)
 @pytest.mark.parametrize("triple, factor, expected", scale_tests)
 def test_scale_triple(triple, factor, expected):
     """
@@ -149,7 +149,7 @@ YELLOW = (255, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(15)
 @pytest.mark.parametrize("fg_filename, bg_filename, screen_color, loc, expected",
     [("tests/checkerboard_green.ppm", "tests/blue_yellow_stripe.ppm",
       GREEN, (0, 0), BLUE),
@@ -205,7 +205,7 @@ def test_choose_pixel(fg_filename, bg_filename, screen_color, loc, expected):
 
 with open("tests/combine_images_tests.json", encoding="UTF-8") as f:
     combine_tests = json.load(f)
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(15)
 @pytest.mark.parametrize("fg_filename, bg_filename, screen_color, expected_filename",
                          combine_tests)
 def test_combine_images(fg_filename, bg_filename, screen_color, expected_filename):
@@ -250,7 +250,7 @@ def test_combine_images(fg_filename, bg_filename, screen_color, expected_filenam
 
 with open("tests/count_color_tests.json", encoding="UTF-8") as f:
     is_color_tests = json.load(f)
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(15)
 @pytest.mark.parametrize("tst_dict", is_color_tests)
 def test_is_color_in_region(tst_dict):
     """
@@ -288,7 +288,7 @@ def test_is_color_in_region(tst_dict):
 
 with open("tests/find_region_location_tests.json", encoding="UTF-8") as f:
     find_region_tests = json.load(f)
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(15)
 @pytest.mark.parametrize("tst_dict", find_region_tests)
 def test_find_region_locations(tst_dict):
     """
@@ -344,7 +344,7 @@ def test_find_region_locations(tst_dict):
 
 with open("tests/blur_images_tests.json", encoding="UTF-8") as f:
     blur_tests = json.load(f)
-@pytest.mark.timeout(60)
+@pytest.mark.timeout(15)
 @pytest.mark.parametrize("fg_filename, bg_filename, screen_color, radius, expected_filename",
                          blur_tests)
 def test_combine_with_blurring(fg_filename, bg_filename, screen_color, radius, expected_filename):
