@@ -27,37 +27,37 @@ WHITE = (255, 255, 255)
 
 
 def add_triples(triple1, triple2):
-    """ Add your doc string"""
+    """ Replace with doc string"""
     pass
 
 
 def scale_triple(triple, factor):
-    """ Add your doc string"""
+    """ Replace with your doc string"""
     pass
 
 
 def choose_pixel(foreground, background, screen_color, loc):
-    """ Add your doc string"""
+    """ Replace with your doc string"""
     pass
 
 
 def combine_images(foreground, background, screen_color):
-    """ Add your doc string"""
-    pass
-
-
-def find_region_locations(image, loc, radius):
-    """ Add your doc string"""
+    """ Replace with your doc string"""
     pass
 
 
 def is_color_in_region(image, region_locs, screen_color):
-    """ Add your doc string"""
+    """ Replace with your doc string"""
     pass
 
 
-def combine_with_blurring(img1, img2, screen_color, radius):
-    """ Add your doc string"""
+def find_region_locations(image, loc, radius):
+    """ Replace with your doc string"""
+    pass
+
+
+def combine_with_blurring(foreground, background, screen_color, radius):
+    """ Replace with your doc string"""
     pass
 
 
