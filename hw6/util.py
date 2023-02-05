@@ -111,6 +111,6 @@ def get_json_from_file(filename):
     try:
         return json.load(open(filename))
     except OSError as e:
-        print("Did you forget to download the data and tests?")
+        print("\n\n****** Did you forget to download tests files? ******\n\n")
         print(e, file=sys.stderr)
         sys.exit(1)
