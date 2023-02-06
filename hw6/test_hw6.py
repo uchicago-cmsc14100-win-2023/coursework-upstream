@@ -233,7 +233,7 @@ def test_find_top_k_entities(filename, entity_key, k, expected):
     tweets_per_user = get_json_from_file(filename)
 
     recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
-                    f"  import json\n"
+                    f"  import util\n"
                     f"  import {MODULE}\n"
                     f"  tweets_per_user = util.get_json_from_file('{filename}')\n"
                     f"  expected = {str(expected)}\n"
@@ -267,7 +267,7 @@ def test_find_min_count_entities(filename, entity_key, min_count, expected):
     tweets_per_user = get_json_from_file(filename)
 
     recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
-                    f"  import json\n"
+                    f"  import util\n"
                     f"  import {MODULE}\n"
                     f"  tweets_per_user = util.get_json_from_file('{filename}')\n"
                     f"  expected = {str(expected)}\n"
@@ -287,7 +287,7 @@ def test_find_min_count_entities(filename, entity_key, min_count, expected):
     if nn_error:
         pytest.fail("\n" + nn_error + recreate_msg)
 
-    error_msg = get_user_to_list_error(actual, expected)
+    error_msg = get_user_to_list_error(actual, expected, True)
     if error_msg:
         pytest.fail("\n" + error_msg + recreate_msg)
     
@@ -305,7 +305,7 @@ def test_find_top_k_ngrams(filename, n, k, expected):
         expected[user] = [tuple(v) for v in vals]
 
     recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
-                    f"  import json\n"
+                    f"  import util\n"
                     f"  import {MODULE}\n"
                     f"  tweets_per_user = util.get_json_from_file('{filename}')\n"
                     f"  expected = {str(expected)}\n"
@@ -343,7 +343,7 @@ def test_find_min_count_ngrams(filename, n, min_count, expected):
         expected[user] = [tuple(v) for v in vals]
 
     recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
-                    f"  import json\n"
+                    f"  import util\n"
                     f"  import {MODULE}\n"
                     f"  tweets_per_user = util.get_json_from_file('{filename}')\n"
                     f"  expected = {str(expected)}\n"
@@ -541,7 +541,7 @@ def get_user_to_list_error(actual, expected, sort_before_check=False):
     for key, expected_val in expected.items():
         print(actual[key])
         print(expected_val)
-        error_msg = get_list_error(actual[key], expected_val, "list[str]")
+        error_msg = get_list_error(actual[key], expected_val, "list[str]", sort_before_check)
         if error_msg:
             return msg4.format(key) + error_msg
     
@@ -553,7 +553,6 @@ def gen_recreate_header(tweet_filename, lb=None, ub=None):
         tweets_str = f"  tweets = util.get_json_from_file('{tweet_filename}')\n"
 
     msg = (f"\n\nTo recreate this test in ipython3, run:\n"
-           f"  import json\n"
            f"  import {MODULE}\n"
            f"  import util\n") + tweets_str
 
