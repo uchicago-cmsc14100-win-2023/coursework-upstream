@@ -32,7 +32,7 @@ def gen_recreate_header(version_str, include_version=False):
     msg = (f"\n\nTo recreate this test in ipython3, run:\n" + 
            version_import_str + 
            f"  import {MODULE}\n" + 
-           f"  vs = {MODULE}.Version_Spec('{version_str}')\n")
+           f"  vs = {MODULE}.VersionSpecification('{version_str}')\n")
 
     return msg
 
