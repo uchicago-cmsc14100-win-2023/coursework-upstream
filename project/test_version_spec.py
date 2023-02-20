@@ -137,7 +137,7 @@ def test_version_spec_str_method(vs_str):
                           ])
 def test_satisfies_specification(vs_str, v_tuple, expected):
     major, minor, patch = v_tuple
-    recreate_msg = gen_recreate_header(vs_str) + \
+    recreate_msg = gen_recreate_header(vs_str, True) + \
         f"  v = version.Version({major}, {minor}, {patch})\n" + \
         f"  vs.satisfies_specification(v)\n"
 
