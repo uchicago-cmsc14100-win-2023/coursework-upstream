@@ -188,6 +188,17 @@ def test_satisfies_version_req(vs_str, v_tuple, expected):
     vstr = ".".join([str(r) for r in v_tuple])
     reg_by = "Sam Spade"
     
+    # set up recreation message
+    if isinstance(vs_str, str):
+        ver_spec_str = f"version_spec.VersionSpecification('{vs_str}')"
+    else:
+        ver_spec_str = str(vs_str)
+    recreate_msg = gen_recreate_header([(name, vstr, reg_by)], True) + \
+        f"  ver_spec = {ver_spec_str}\n" + \
+        f"  expected = {expected}\n" + \
+        f"  actual = lib0.satisfies_version_req(ver_spec)\n"
+
+
     # set up the version specification
     if isinstance(vs_str, str):
         # construct the version specification
@@ -197,20 +208,12 @@ def test_satisfies_version_req(vs_str, v_tuple, expected):
         # should not fail, but you never know...
         if error_msg is not None:
             pytest.fail("\n" + error_msg + recreate_msg)
-
-        ver_spec_str = f"version_spec.VersionSpecification('{vs_str}')"
         exception_expected = False
     else:
         # not a version string...intended to generate an exception
         ver_spec = vs_str
-        ver_spec_str = str(vs_str)
         exception_expected = True    
 
-    recreate_msg = gen_recreate_header([(name, vstr, reg_by)], True) + \
-        f"  ver_spec = {ver_spec_str}\n" + \
-        f"  expected = {expected}\n" + \
-        f"  actual = lib0.satisfies_version_req(ver_spec)\n"
-    
 
     # construct the library version
     lib0, error_msg = check_fn(lambda : library.Library(name, vstr, reg_by),
