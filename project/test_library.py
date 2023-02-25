@@ -19,11 +19,13 @@ sys.path.insert(0, os.getcwd())
 # Don't complain about the position of the import
 # pylint: disable=wrong-import-position
 import library
+import version
 import version_spec
 
 MODULE = "library"
 
-
+def mk_str_parameter(x):
+    return str(x) if not isinstance(x, str) else f"'{x}'"
 
 def gen_recreate_header(libraries, include_version_spec=False):
     msg = (f"\n\nTo recreate this test in ipython3, run:\n"
@@ -35,7 +37,7 @@ def gen_recreate_header(libraries, include_version_spec=False):
     for i, lib_info in enumerate(libraries):
         if isinstance(lib_info, tuple):
             lib_name, lib_vstr, reg_by = lib_info
-            msg += f"  lib{i} = {MODULE}.Library('{lib_name}', '{lib_vstr}', '{reg_by}')\n"
+            msg += f"  lib{i} = {MODULE}.Library({mk_str_parameter(lib_name)}, {mk_str_parameter(lib_vstr)}, {mk_str_parameter(reg_by)})\n"
         elif isinstance(lib_info, str):
             msg += f"  lib{i} = '{lib_info}'\n"
         else:
@@ -506,3 +508,201 @@ def test_remove_dependency(lib_idx, dep_idxs, remove_idxs, exception_expected_id
         if error_msg is not None:
             pytest.fail("\n" + error_msg + recreate_msg)
             
+
+def make_libraries(libs_args, recreate_msg):
+    """
+    Make the needed libraries for subsequent tests
+    """
+    libraries = []
+    # construct the necessary library versions
+    for i, (name, vstr, reg_by) in enumerate(libs_args):
+        name_p = mk_str_parameter(name)
+        vstr_p = mk_str_parameter(vstr)
+        reg_by_p = mk_str_parameter(reg_by)        
+
+        recreate_msg += f"  lib{i} = {MODULE}.Library({name_p}, {vstr_p}, {reg_by_p})\n"
+        lib, error_msg = check_fn(lambda : library.Library(name, vstr, reg_by),
+                                  library.LibraryException,
+                                  False)
+        # should not fail, but you never know...
+        if error_msg is not None:
+            pytest.fail("\n" + error_msg + recreate_msg)
+
+        libraries.append(lib)
+    return libraries, recreate_msg
+
+
+def add_deps_to_libs(libraries, deps_args, recreate_msg):
+    # add the dependencies to the libraries
+    for i, (lib_idx, dep_idx, should_fail) in enumerate(deps_args):
+        lib = libraries[lib_idx]
+        if should_fail:
+            recreate_msg += "\n  # should raise an exception\n"
+        else:
+            recreate_msg += "\n  # should not raise an exception \n"
+        recreate_msg += f"  lib{lib_idx}.add_dependency(lib{dep_idx})\n"
+        val, error_msg = check_fn(lambda : lib.add_dependency(libraries[dep_idx]),
+                                  library.LibraryException,
+                                  should_fail)
+        if error_msg is not None:
+            pytest.fail("\n" + error_msg + recreate_msg)
+    # no return value needed, update the libraries in place
+
+
+@pytest.mark.parametrize("libs_args, deps_args",
+                         [
+                             ([("libA", "1.2.3", "Armand Gamache"), 
+                               ("libB", "1.0.0",  "Sam Spade")], 
+                              [(0, 1, False)]),   # valid depedency
+
+                             ([("libA", "1.2.3", "Armand Gamache"), 
+                               ("libA", "1.0.0", "Armand Gamache")], 
+                              [(0, 1, True)]),   # Cannot depend on a library of the same name
+
+                             ([("libA", "1.2.3", "Armand Gamache"), 
+                               ("libB", "1.0.0", "Sam Spade"),
+                               ("libC", "3.1.5", "Barbara Havers"),
+                               ("libD", "2.4.3", "Thomas Lynley"),
+                               ("libE", "3.3.3", "Kurt Wallander"), 
+                               ], 
+                              [(3, 1, False),
+                               (1, 3, True),    # cycle: 1 -> 3 -> 1
+                               (2, 4, False),
+                               (0, 2, False),
+                               (0, 1, False),
+                               ]),
+
+                             ([("libA", "1.2.3", "Armand Gamache"), 
+                               ("libB", "1.0.0", "Sam Spade"),
+                               ("libC", "3.1.5", "Barbara Havers"),
+                               ("libD", "2.4.3", "Thomas Lynley")], 
+                              [(3, 0, False),
+                               (2, 3, False),
+                               (1, 2, False),
+                               (0, 2, True)]),   # cycle 0 -> 2 -> 3 -> 0
+
+                             ([("libA", "1.2.3", "Armand Gamache"), 
+                               ("libB", "1.0.0", "Sam Spade"),
+                               ("libC", "3.1.5", "Barbara Havers"),
+                               ("libD", "2.4.3", "Thomas Lynley"),
+                               ("libE", "3.3.3", "Kurt Wallander"), 
+                               ], 
+                              [(4, 1, False),
+                               (3, 4, False),
+                               (1, 3, True),   # cycle 1 -> 3 -> 4 -> 1
+                               (0, 2, False),  # OK to add after the cycle fails
+                               (0, 1, False),
+                               ]),
+
+                             
+                             ([("libA", "1.2.3", "Armand Gamache"), 
+                               ("libB", "1.0.0", "Sam Spade"),
+                               ("libC", "3.1.5", "Barbara Havers"),
+                               ("libD", "2.4.3", "Thomas Lynley"),
+                               ("libE", "3.3.3", "Kurt Wallander"), 
+                               ], 
+                              [(3, 4, False),
+                               (2, 4, False),
+                               (1, 3, False),
+                               (0, 2, False),
+                               (0, 1, False),  # ALL OK
+                               ]),
+
+                             ([("libA", "1.2.3", "Armand Gamache"), 
+                               ("libB", "1.0.0", "Sam Spade"),
+                               ("libC", "3.1.5", "Barbara Havers"),
+                               ("libD", "2.4.3", "Thomas Lynley"),
+                               ("libE", "3.3.3", "Kurt Wallander"), 
+                               ], 
+                              [(4, 2, False),
+                               (3, 4, False),
+                               (1, 3, False),
+                               (0, 1, False),  # 0 -> 1 -> 3 OK
+                               (2, 3, True),  # cycle: 2 -> 3 -> 4 -> 2 
+                               ]),
+
+                         ])                         
+def test_add_cycles_dependency(libs_args, deps_args):
+    recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
+                    f"  import {MODULE}\n")
+
+    libraries, recreate_msg = make_libraries(libs_args, recreate_msg)
+    add_deps_to_libs(libraries, deps_args, recreate_msg)
+
+            
+
+@pytest.mark.parametrize("lib",
+                         [("libA", "1.2.3", "Armand Gamache")
+                          ])
+def test_get_lib_name(lib):
+    recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
+                    f"  import {MODULE}\n")
+    
+    libraries, recreate_msg = make_libraries([lib], recreate_msg)
+    try:
+        actual = libraries[0].get_name()
+    except Exception as e:
+        error_msg = (f"Unexpected exception caught during call to get_name:\n"
+                     f"   {e.__class__.__name__}: {e}\n"
+                     f"\nException {traceback.format_exc()}")
+        pytest.fail("\n" + error_msg + recreate_msg)
+
+    recreate_msg += "  lib0.get_name()\n"
+    
+    # check the result
+    expected = lib[0]
+    error_msg = helpers.check_result(actual, expected, recreate_msg)
+    if not error_msg is None:
+        pytest.fail("\n" + error_msg + recreate_msg)
+
+        
+@pytest.mark.parametrize("lib, expected",
+                         [(("libA", "1.2.3", "Armand Gamache"), (1, 2, 3)),
+                          (("libA", "999.2000.3", "Armand Gamache"), (999, 2000, 3)),
+                          ])
+def test_get_lib_version(lib, expected):
+    recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
+                    f"  import {MODULE}\n")
+    
+    libraries, recreate_msg = make_libraries([lib], recreate_msg)
+    try:
+        actual = libraries[0].get_version()
+    except Exception as e:
+        error_msg = (f"Unexpected exception caught during call to get_version:\n"
+                     f"   {e.__class__.__name__}: {e}\n"
+                     f"\nException {traceback.format_exc()}")
+        pytest.fail("\n" + error_msg + recreate_msg)
+
+    recreate_msg += "  lib0.get_version()\n"
+
+    # check the result
+    expected = version.Version(*expected)
+    error_msg = helpers.check_result(actual, expected, recreate_msg)
+    if not error_msg is None:
+        pytest.fail("\n" + error_msg + recreate_msg)
+
+
+@pytest.mark.parametrize("lib",
+                         [("libA", "1.2.3", "Armand Gamache")
+                          ])
+def test_get_lib_registered_by(lib):
+    recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
+                    f"  import {MODULE}\n")
+    
+    libraries, recreate_msg = make_libraries([lib], recreate_msg)
+    try:
+        actual = libraries[0].get_registered_by()
+    except Exception as e:
+        error_msg = (f"Unexpected exception caught during call to get_registered_by:\n"
+                     f"   {e.__class__.__name__}: {e}\n"
+                     f"\nException {traceback.format_exc()}")
+        pytest.fail("\n" + error_msg + recreate_msg)
+
+    recreate_msg += "  lib0.get_registered_by()\n"
+    
+    # check the result
+    expected = lib[2]
+    error_msg = helpers.check_result(actual, expected, recreate_msg)
+    if not error_msg is None:
+        pytest.fail("\n" + error_msg + recreate_msg)
+        
