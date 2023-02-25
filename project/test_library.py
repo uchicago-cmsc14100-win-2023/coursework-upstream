@@ -653,7 +653,7 @@ def test_get_lib_name(lib):
     expected = lib[0]
     error_msg = helpers.check_result(actual, expected, recreate_msg)
     if not error_msg is None:
-        pytest.fail("\n" + error_msg + recreate_msg)
+        pytest.fail("\n" + error_msg)
 
         
 @pytest.mark.parametrize("lib, expected",
@@ -679,13 +679,13 @@ def test_get_lib_version(lib, expected):
     expected = version.Version(*expected)
     error_msg = helpers.check_result(actual, expected, recreate_msg)
     if not error_msg is None:
-        pytest.fail("\n" + error_msg + recreate_msg)
+        pytest.fail("\n" + error_msg)
 
 
 @pytest.mark.parametrize("lib",
                          [("libA", "1.2.3", "Armand Gamache")
                           ])
-def test_get_lib_registered_by(lib):
+def test_get_registered_by(lib):
     recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
                     f"  import {MODULE}\n")
     
@@ -704,5 +704,181 @@ def test_get_lib_registered_by(lib):
     expected = lib[2]
     error_msg = helpers.check_result(actual, expected, recreate_msg)
     if not error_msg is None:
-        pytest.fail("\n" + error_msg + recreate_msg)
+        pytest.fail("\n" + error_msg)
         
+
+@pytest.mark.parametrize("lib_idx, deps, level, expected_contacts, exception_expected",
+                         [(0,
+                           ((0, 1, False),
+                            (0, 2, False)),
+                           0,
+                           [],
+                           False),   # no contacts for level 0
+
+                          (0,
+                           ((0, 1, False),
+                            (0, 2, False)),
+                           1,
+                           [1, 2],
+                           False),
+
+                          (0,
+                           ((0, 1, False),
+                            (0, 2, False)),
+                           None,
+                           [1, 2],
+                           False),  # same answer for both None and level 0
+                          
+                          (0,
+                           ((7, 3, False),
+                            (6, 2, False),
+                            (6, 7, False),
+                            (1, 6, False),
+                            (0, 1, False),
+                            (0, 2, False)),
+                           None,
+                           [1, 2, 3, 6, 7],
+                           False),  # all the levels
+                          
+                          (0,
+                           ((7, 3, False),
+                            (6, 2, False),
+                            (6, 7, False),
+                            (1, 6, False),
+                            (0, 1, False),
+                            (0, 2, False)),
+                           1,
+                           [1, 2],
+                           False),  # level 1
+
+                          (0,
+                           ((7, 3, False),
+                            (6, 2, False),
+                            (6, 7, False),
+                            (1, 6, False),
+                            (0, 1, False),
+                            (0, 2, False)),
+                           2,
+                           [1, 2, 6],
+                           False),  # level 2
+
+                          (0,
+                           ((7, 3, False),
+                            (6, 2, False),
+                            (6, 7, False),
+                            (1, 6, False),
+                            (0, 1, False),
+                            (0, 2, False)),
+                           3,
+                           [1, 2, 6, 7],
+                           False),  # level 3
+
+                          (0,
+                           ((7, 3, False),
+                            (6, 2, False),
+                            (6, 7, False),
+                            (1, 6, False),
+                            (0, 1, False),
+                            (0, 2, False)),
+                           4,
+                           [1, 2, 3, 6, 7],
+                           False),  # level 4
+
+                          (0,
+                           ((7, 3, False),
+                            (6, 2, False),
+                            (6, 7, False),
+                            (1, 6, False),
+                            (0, 1, False),
+                            (0, 2, False)),
+                           5,
+                           [1, 2, 3, 6, 7],
+                           False),  # more levels than tree has
+
+                          (0,
+                           ((6, 7, False),
+                            (1, 6, False),
+                            (2, 6, False),
+                            (0, 1, False),
+                            (0, 2, False)),  # directed acyclic graph
+                           None,
+                           [1, 2, 6, 7],
+                           False),  # all the levels
+
+                          (0,
+                           [(0, 1, False)],
+                           -1, 
+                           [],
+                           True),  # bad level
+                          
+                          (0,
+                           [(0, 1, False)],
+                           "hello",
+                           [],
+                           True),  # bad level
+
+                          (7,
+                           [],
+                           None,
+                           [],
+                           False), # no deps
+
+                          
+
+                         ])
+
+def test_get_dep_contacts(lib_idx, deps, level, expected_contacts, exception_expected):
+    recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
+                    f"  import {MODULE}\n")
+
+    print(deps)
+    libraries = []
+    to_make = set([lib_idx])
+    for from_idx, to_idx, _ in deps:
+        to_make.add(from_idx)
+        to_make.add(to_idx)
+
+    # construct the necessary library versions
+    for i, (name, vstr, reg_by) in enumerate(libraries_to_make):
+        if i in to_make:
+            recreate_msg += f"  lib{i} = {MODULE}.Library('{name}', '{vstr}', '{reg_by}')\n"
+            lib, error_msg = check_fn(lambda : library.Library(name, vstr, reg_by),
+                                      library.LibraryException,
+                                      False)
+            # should not fail, but you never know...
+            if error_msg is not None:
+                pytest.fail("\n" + error_msg + recreate_msg)
+        else:
+            # we don't use this one, make the slot empty
+            # to make the indexes work out
+            lib = None
+        libraries.append(lib)
+
+    add_deps_to_libs(libraries, deps, recreate_msg)
+
+    recreate_msg += f"  lib{lib_idx}.get_dep_contacts({mk_str_parameter(level)})\n"
+
+    # root
+    lib = libraries[lib_idx]
+    actual, error_msg = check_fn(lambda :  lib.get_dep_contacts(level),
+                                   library.LibraryException,
+                                   exception_expected)
+    if error_msg is not None:
+        pytest.fail("\n" + error_msg + recreate_msg)
+
+    if exception_expected and actual is None:
+        # all good.
+        return
+
+    # check the result
+    expected = set()
+    for idx in expected_contacts:
+        _, _, reg_by = libraries_to_make[idx]
+        expected.add(reg_by)
+
+    error_msg = helpers.check_result(actual, expected, recreate_msg)
+    if not error_msg is None:
+        pytest.fail(error_msg)
+    
+
+    

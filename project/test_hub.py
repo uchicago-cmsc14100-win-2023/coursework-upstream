@@ -54,7 +54,7 @@ def add_libraries_to_hub(libs):
 
     # building the hub should not fail
     lib_hub, error_msg = check_fn(lambda : hub.LibraryHub(), hub.LibraryHubException, False)
-    if not error_msg is None:
+    if error_msg:
         parts["recreate_msg"] = recreate_msg
         parts["error_msg"] = error_msg
         return parts
@@ -67,7 +67,7 @@ def add_libraries_to_hub(libs):
         lib, error_msg = check_fn(lambda : lib_hub.register_library(lib_name, lib_ver, reg_by),
                                   hub.LibraryHubException,
                                   exception_expected)
-        if not error_msg is None:
+        if error_msg:
             parts["recreate_msg"] = recreate_msg
             parts["error_msg"] = error_msg
             return parts
@@ -177,7 +177,7 @@ def test_register_library(libs):
             lib, error_msg = check_fn(lambda : lib_hub.register_library(lib_name, lib_ver, reg_by),
                                       hub.LibraryHubException,
                                       True)
-            if not error_msg is None:
+            if error_msg:
                 pytest.fail("\n" + error_msg + recreate_msg)
 
 
@@ -279,7 +279,7 @@ def test_get_library(libs, gets):
         lib, error_msg = check_fn(lambda : lib_hub.get_library(lib_name, ver_spec_str),
                                   hub.LibraryHubException,
                                   exception_expected)
-        if not error_msg is None:
+        if error_msg:
             pytest.fail("\n" + error_msg + recreate_msg)
 
         if expected_idx is None:
@@ -349,7 +349,7 @@ def test_get_library(libs, gets):
                             ]
                            )
                           ])
-def test_hub_add_dependencies(hub_filename, deps):
+def test_add_dependencies(hub_filename, deps):
     libs = []
     try:
         with open(hub_filename) as f:
@@ -387,7 +387,7 @@ def test_hub_add_dependencies(hub_filename, deps):
         lib, error_msg = check_fn(lambda : lib_hub.add_dependency(lib_name, lib_ver, dep_name, dep_ver_spec),
                                   hub.LibraryHubException,
                                   exception_expected)
-        if not error_msg is None:
+        if error_msg:
             pytest.fail("\n" + error_msg + recreate_msg)
 
 
@@ -471,7 +471,7 @@ def test_hub_add_dependencies(hub_filename, deps):
                            [(-3,)]),  # bad lib version
 
                           ])
-def test_hub_remove_dependencies(hub_filename, deps, removes):
+def test_remove_dependencies(hub_filename, deps, removes):
     libs = []
     try:
         with open(hub_filename) as f:
@@ -522,7 +522,7 @@ def test_hub_remove_dependencies(hub_filename, deps, removes):
         lib, error_msg = check_fn(lambda : lib_hub.remove_dependency(lib_name, lib_ver, dep_name, dep_ver),
                                   hub.LibraryHubException,
                                   True)
-        if not error_msg is None:
+        if error_msg:
             pytest.fail("\n" + error_msg + recreate_msg)
         else:
             # done with special case
@@ -537,7 +537,7 @@ def test_hub_remove_dependencies(hub_filename, deps, removes):
         lib, error_msg = check_fn(lambda : lib_hub.add_dependency(lib_name, lib_ver, dep_name, dep_ver_spec),
                                   hub.LibraryHubException,
                                   exception_expected)
-        if not error_msg is None:
+        if error_msg:
             pytest.fail("\n" + error_msg + recreate_msg)
 
     # do the removes
@@ -549,13 +549,225 @@ def test_hub_remove_dependencies(hub_filename, deps, removes):
         lib, error_msg = check_fn(lambda : lib_hub.remove_dependency(lib_name, lib_ver, dep_name, dep_ver),
                                   hub.LibraryHubException,
                                   exception_expected)
-        if not error_msg is None:
+        if error_msg:
             pytest.fail("\n" + error_msg + recreate_msg)
         
 
-### TO DO ....
-###  writeup -- finish...
-###  distribution: pytests.ini, new test files
+@pytest.mark.parametrize("hub_filename, deps, level, expected_contacts, exception_expected, start",
+                         [("tests/test2.txt",
+                           [(0, "libB", "1.0.0", False)],
+                           0,
+                           [],
+                           False,
+                           0
+                           ),
+
+                          ("tests/test2.txt",
+                           [(0, "libB", "1.0.0", False)],
+                           1,
+                           [1],
+                           False,
+                           0
+                           ),
+
+                          ("tests/test1.txt",
+                           [(5, "libB", "1.0.1", False),  #Tree
+                            (3, "libF", "3.3.2", False),
+                            (2, "libD", "2.4.3", False),
+                            (2, "libE", "3.3.3", False),
+                            (1, "libF", "3.3.6", False),
+                            (0, "libB", "1.0.0", False),
+                            (0, "libC", "3.1.5", False),                            
+                            ],
+                           1,
+                           [1, 2],
+                           False,
+                           0),
+
+                          ("tests/test1.txt",             # Tree
+                           [(5, "libB", "1.0.1", False),
+                            (3, "libF", "3.3.2", False),
+                            (2, "libD", "2.4.3", False),
+                            (2, "libE", "3.3.3", False),
+                            (1, "libF", "3.3.6", False),
+                            (0, "libB", "1.0.0", False),
+                            (0, "libC", "3.1.5", False),                            
+                            ],
+                           2,
+                           [1, 2, 3, 4],
+                           False,
+                           0),
 
 
-###  contacts test cases (after releasing the rest of the assignment
+                          ("tests/test1.txt",
+                           [(5, "libB", "1.0.1", False),  # Tree
+                            (3, "libF", "3.3.2", False),
+                            (2, "libD", "2.4.3", False),
+                            (2, "libE", "3.3.3", False),
+                            (1, "libF", "3.3.6", False),
+                            (0, "libB", "1.0.0", False),
+                            (0, "libC", "3.1.5", False),                            
+                            ],
+                           None,
+                           [1, 2, 3, 4, 5, 6, 7],
+                           False, 0),
+
+
+                          ("tests/test1.txt",
+                           [(5, "libB", "1.0.1", False), # Directed Acyclic Graph
+                            (3, "libF", "3.3.2", False),
+                            (4, "libF", "3.3.2", False),                            
+                            (2, "libD", "2.4.3", False),
+                            (2, "libE", "3.3.3", False),
+                            (1, "libF", "3.3.6", False),
+                            (0, "libB", "1.0.0", False),
+                            (0, "libC", "3.1.5", False),                            
+                            ],
+                           2,
+                           [1, 2, 3, 4, 6],
+                           False,
+                           0),
+
+                          ("tests/test1.txt",
+                           [(5, "libB", "1.0.1", False), # Directed Acyclic Graph
+                            (3, "libF", "3.3.2", False),
+                            (4, "libF", "3.3.2", False),                            
+                            (2, "libD", "2.4.3", False),
+                            (2, "libE", "3.3.3", False),
+                            (1, "libF", "3.3.6", False),
+                            (0, "libB", "1.0.0", False),
+                            (0, "libC", "3.1.5", False),                            
+                            ],
+                           5,
+                           [1, 2, 3, 4, 5, 6, 7],
+                           False,
+                           0),
+
+
+                          ("tests/test1.txt",
+                           [(5, "libB", "1.0.1", False), # Directed Acyclic Graph
+                            (3, "libF", "3.3.2", False),
+                            (4, "libF", "3.3.2", False),                            
+                            (2, "libD", "2.4.3", False),
+                            (2, "libE", "3.3.3", False),
+                            (1, "libF", "3.3.6", False),
+                            (0, "libB", "1.0.0", False),
+                            (0, "libC", "3.1.5", False),                            
+                            ],
+                           None,
+                           [1, 2, 3, 4, 5, 6, 7],
+                           False,
+                           0),
+
+                          ("tests/test2.txt",
+                           [(0, "libB", "1.0.0", False)],
+                           -1,
+                           [],
+                           True,
+                           0),
+                          
+                          ("tests/test2.txt",
+                           [(0, "libB", "1.0.0", False)],
+                           'sam',
+                           [],
+                           True,
+                           0),
+
+
+                          ("tests/test2.txt",
+                           [(0, "libB", "1.0.0", False)],
+                           -2,
+                           [],
+                           True,
+                           0),
+
+                          ("tests/test2.txt",
+                           [(0, "libB", "1.0.0", False)],
+                           -3,
+                           [],
+                           True,
+                           0),
+                          
+
+                          ])
+def test_get_contacts(hub_filename, deps, level, expected_contacts, exception_expected, start):
+    libs = []
+    try:
+        with open(hub_filename) as f:
+            reader = csv.reader(f)
+            for row in reader:
+                row = [r.strip() for r in row] + [False]
+                libs.append(tuple(row))
+    except Exception:
+        pytest.fail(f"Attempt to read the library information from {hub_filename} failed.")
+
+    parts = add_libraries_to_hub(libs)
+    recreate_msg = parts["recreate_msg"]
+    if not parts["error_msg"] is None:
+        pytest.fail("\n" + parts["error_msg"] + recreate_msg)
+
+    # if we get to here, we can swap out the
+    # recreate message
+    recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
+                    f"  import {MODULE}\n"
+                    f"  lib_hub = hub.create_hub_from_file('{hub_filename}')\n")
+
+    lib_hub = parts["hub"]
+    libraries = parts["libraries"]
+    
+    # add all the dependencies
+    for lib_idx, dep_name, dep_ver_spec, dep_exception_expected in deps:
+        lib_name, lib_ver, _, _ = libs[lib_idx]
+
+        recreate_msg += \
+            f"  lib_hub.add_dependency({mk_str_parameter(lib_name)}, {mk_str_parameter(lib_ver)}, {mk_str_parameter(dep_name)}, {mk_str_parameter(dep_ver_spec)})\n"
+        lib, error_msg = check_fn(lambda : lib_hub.add_dependency(lib_name, lib_ver, dep_name, dep_ver_spec),
+                                  hub.LibraryHubException,
+                                  dep_exception_expected)
+        if error_msg:
+            pytest.fail("\n" + error_msg + recreate_msg)
+
+    # do the work
+    if exception_expected:
+        comment = "\n  # Exception expected from the call to get_contacts\n"
+    else:
+        comment = "\n  # No exception expected from the call to get_contacts\n"
+
+    if isinstance(level, int) and level < 0:
+        if level == -2:
+            start_name = "LibZ"
+            start_ver = "1.1.1"
+            level = 0
+        else:
+            start_name = "LibA"
+            start_ver = "1.1"
+            level = 0
+    else:
+        start_name, start_ver, _, _ = libs[start]
+
+    recreate_msg += \
+        comment + \
+        f"  lib_hub.get_contacts({mk_str_parameter(start_name)}, {mk_str_parameter(start_ver)}, {mk_str_parameter(level)})\n"
+    print("Exception expected:", exception_expected)
+    actual, error_msg = check_fn(lambda : lib_hub.get_contacts(start_name, start_ver, level),
+                                 hub.LibraryHubException,
+                                 exception_expected)
+
+    if error_msg:
+        pytest.fail("\n" + error_msg + recreate_msg)
+
+    if exception_expected and actual is None:
+        # all good
+        return
+
+    # check the result
+    expected = set()
+    for idx in expected_contacts:
+        _, _, reg_by, _ = libs[idx]
+        expected.add(reg_by)
+
+    error_msg = helpers.check_result(actual, expected, recreate_msg)
+    if error_msg:
+        pytest.fail(error_msg)
+    
+    

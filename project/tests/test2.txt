@@ -1,0 +1,2 @@
+libA,1.2.3,Armand Gamache 
+libB,1.0.0,Sam Spade
