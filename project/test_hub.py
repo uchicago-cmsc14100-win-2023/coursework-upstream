@@ -349,7 +349,7 @@ def test_get_library(libs, gets):
                             ]
                            )
                           ])
-def test_add_dependencies(hub_filename, deps):
+def test_hub_add_dependencies(hub_filename, deps):
     libs = []
     try:
         with open(hub_filename) as f:
@@ -471,7 +471,7 @@ def test_add_dependencies(hub_filename, deps):
                            [(-3,)]),  # bad lib version
 
                           ])
-def test_remove_dependencies(hub_filename, deps, removes):
+def test_hub_remove_dependencies(hub_filename, deps, removes):
     libs = []
     try:
         with open(hub_filename) as f:

@@ -685,7 +685,7 @@ def test_get_lib_version(lib, expected):
 @pytest.mark.parametrize("lib",
                          [("libA", "1.2.3", "Armand Gamache")
                           ])
-def test_get_registered_by(lib):
+def test_get_lib_registered_by(lib):
     recreate_msg = (f"\n\nTo recreate this test in ipython3, run:\n"
                     f"  import {MODULE}\n")
     
