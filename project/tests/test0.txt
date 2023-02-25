@@ -1,0 +1,17 @@
+libA,1.2.3,Armand Gamache 
+libA,1.2.4,Armand Gamache
+libA,2.1.5,Armand Gamache
+libA,2.1.9,Armand Gamache
+libA,2.1.0,Armand Gamache
+libA,2.2.4,Armand Gamache
+libA,2.4.2,Armand Gamache
+libA,3.1.5,Armand Gamache
+libB,0.0.0,Sam Spade    
+libB,1.0.0,Sam Spade
+libB,1.0.1,Sam Spade
+libC,3.1.5,Barbara Havers
+libC,3.2.0,Barbara Havers
+libC,0.2.0,Barbara Havers
+libD,2.4.3,Thomas Lynley
+libE,3.3.3,Kurt Wallander
+libF,3.3.2,Kurt Wallander
