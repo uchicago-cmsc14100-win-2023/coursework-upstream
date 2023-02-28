@@ -140,8 +140,10 @@ def add_deps_to_libs(libraries, deps_args, recreate_msg):
                                   should_fail)
         if error_msg is not None:
             pytest.fail("\n" + error_msg + recreate_msg)
-    # no return value needed, update the libraries in place
-
+    # return the updated recreate message,
+    # which includes the code needed to create the
+    # dependencies
+    return recreate_msg
 
 
 @pytest.mark.parametrize("lib_idx, deps, level, expected_contacts, exception_expected",
@@ -290,7 +292,9 @@ def test_get_dep_contacts(lib_idx, deps, level, expected_contacts, exception_exp
             lib = None
         libraries.append(lib)
 
-    add_deps_to_libs(libraries, deps, recreate_msg)
+    # Will add the dependencies and update the recreate
+    # message to include them.
+    recreate_msg = add_deps_to_libs(libraries, deps, recreate_msg)
 
     recreate_msg += f"  lib{lib_idx}.get_dep_contacts({mk_str_parameter(level)})\n"
 

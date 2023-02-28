@@ -275,7 +275,7 @@ def test_get_library(libs, gets):
     lib_hub = parts["hub"]
     for i, (lib_name, ver_spec_str, exception_expected, expected_idx) in enumerate(gets):
         recreate_msg += \
-            f"\n  found_lib{i} = lib.hub.get_library({mk_str_parameter(lib_name)}, {mk_str_parameter(ver_spec_str)})\n"
+            f"\n  found_lib{i} = lib_hub.get_library({mk_str_parameter(lib_name)}, {mk_str_parameter(ver_spec_str)})\n"
         lib, error_msg = check_fn(lambda : lib_hub.get_library(lib_name, ver_spec_str),
                                   hub.LibraryHubException,
                                   exception_expected)
